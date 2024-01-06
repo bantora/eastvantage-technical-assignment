@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+import type { User } from './api/random-user/types';
+import type { ReactElement } from 'react';
 
+import { useEffect, useState } from 'react';
+
+import { getRandomUser } from './api/random-user/RandomUser';
+import { UserValues } from './util/InitialValues';
+
+const App = (): ReactElement => {
+  const [user, setUser] = useState<User>(UserValues);
+
+  const handleNewUser = (): void => {
+    getRandomUser()
+      .then((data) => {
+        setUser(data);
+        localStorage.setItem('userData', JSON.stringify(data));
+      })
+      .catch((err) => console.error('failed to fetch user:', err))
+  }
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('userData');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    } else {
+      handleNewUser();
+    }
+  }, [])
+
+  const { name: { first, last, title }, email, picture: { large } } = user.results[0];
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="container">
+        <img className='image' src={large} />
+        <h2>{`${title}. ${first} ${last}`}</h2>
+        <h3>{email}</h3>
+        <button onClick={handleNewUser}>Refresh</button>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
-}
+};
 
 export default App
